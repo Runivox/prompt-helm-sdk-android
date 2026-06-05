@@ -23,14 +23,14 @@ internal object MockHttpClient {
     internal fun jsonResponse(
         status: HttpStatusCode,
         body: String,
-        correlationId: String = "test-corr-1",
+        requestId: String = "test-req-1",
     ): suspend MockRequestHandleScope.(HttpRequestData) -> HttpResponseData = {
         respond(
             content = body,
             status = status,
             headers = headersOf(
                 HttpHeaders.ContentType to listOf("application/json"),
-                "x-correlation-id" to listOf(correlationId),
+                "x-request-id" to listOf(requestId),
             ),
         )
     }

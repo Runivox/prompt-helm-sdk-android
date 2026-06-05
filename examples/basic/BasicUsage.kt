@@ -44,11 +44,11 @@ public object BasicUsage {
             println("output=${response.output}")
             println("model=${response.model} cost=${response.cost} tokens=${response.totalTokens}")
         } catch (e: AuthenticationException) {
-            println("Bad API key. correlationId=${e.correlationId}")
+            println("Bad API key. requestId=${e.requestId}")
         } catch (e: RateLimitException) {
             println("Rate limited. Back off and retry later.")
         } catch (e: ApiException) {
-            println("API failed: status=${e.statusCode} code=${e.code} message=${e.message}")
+            println("API failed: status=${e.statusCode} errorCode=${e.errorCode} message=${e.message}")
         }
     }
 

@@ -105,9 +105,12 @@ try {
 }
 ```
 
-Every `PromptHelmException` carries the `statusCode`, the optional `code`
-(stable identifier from `docs/ERROR_CODES.md`), and the `correlationId`
-echoed by the backend — log it for on-call.
+Every `PromptHelmException` carries the `statusCode`, the optional
+`errorCode` (the backend's machine-readable code, e.g. `VALIDATION_ERROR`,
+`GATEWAY_MISSING_VARIABLES`, `PROMPT_VERSION_NOT_FOUND`), the `message`,
+and the `requestId` echoed by the backend — log the `requestId` for
+on-call. The gateway error envelope is
+`{ statusCode, errorCode, message, timestamp, requestId }`.
 
 ### Retry policy
 

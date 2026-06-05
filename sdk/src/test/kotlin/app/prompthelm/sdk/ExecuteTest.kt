@@ -109,7 +109,7 @@ class ExecuteTest {
 
     @Test
     fun `execute throws AuthenticationException on 401`() = runTest {
-        val errorBody = """{"statusCode":401,"error":"Unauthorized","message":"Invalid API key.","code":"unauthorized","correlationId":"corr-401"}"""
+        val errorBody = """{"statusCode":401,"errorCode":"UNAUTHORIZED","message":"Invalid API key.","timestamp":"2026-06-05T10:30:00.000Z","requestId":"req-401"}"""
         val engine = MockHttpClient.engine(
             MockHttpClient.jsonResponse(HttpStatusCode.Unauthorized, errorBody),
         )
@@ -122,8 +122,8 @@ class ExecuteTest {
         assertTrue(ex is AuthenticationException, "expected AuthenticationException, got $ex")
         ex as AuthenticationException
         assertEquals(401, ex.statusCode)
-        assertEquals("unauthorized", ex.code)
-        assertEquals("corr-401", ex.correlationId)
+        assertEquals("UNAUTHORIZED", ex.errorCode)
+        assertEquals("req-401", ex.requestId)
         assertEquals("Invalid API key.", ex.message)
         client.close()
     }

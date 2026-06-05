@@ -80,8 +80,8 @@ internal class HttpClient(
         } catch (e: SerializationException) {
             throw ApiException(
                 statusCode = response.status.value,
-                code = "invalid_response",
-                correlationId = response.headers["x-correlation-id"],
+                errorCode = "INVALID_RESPONSE",
+                requestId = response.headers["x-request-id"],
                 message = "Failed to deserialize gateway response: ${e.message}",
                 cause = e,
             )

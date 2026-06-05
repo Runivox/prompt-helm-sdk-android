@@ -5,33 +5,38 @@ import kotlinx.serialization.Serializable
 /**
  * Wire shape of the backend's `GlobalExceptionFilter` response body.
  *
- * Mirrors the `{ statusCode, error, message, code?, correlationId? }`
- * contract documented in `prompt-helm-backend/docs/ERROR_CODES.md`.
+ * Mirrors the exact envelope emitted by the PromptHelm gateway:
+ * `{ statusCode, errorCode, message, timestamp, requestId }`. All five
+ * fields are always present on a real error response; the SDK tolerates
+ * missing fields defensively so a malformed body never masks the
+ * underlying HTTP status.
  */
 @Serializable
 internal data class ErrorEnvelope(
-    val statusCode: Int,
-    val error: String,
-    val message: String,
-    val code: String? = null,
-    val correlationId: String? = null,
+    val statusCode: Int? = null,
+    val errorCode: String? = null,
+    val message: String? = null,
+    val timestamp: String? = null,
+    val requestId: String? = null,
 )
 
 /**
  * Base class for every error raised by the PromptHelm SDK after
  * receiving a structured error response from the API.
  *
- * @property statusCode    HTTP status code returned by the gateway.
- * @property code          Stable application-level error code (e.g. `provider_timeout`).
- *                         May be `null` when the gateway did not provide one.
- * @property correlationId The `x-correlation-id` echoed by the backend, useful
- *                         for log search. May be `null` if the response did not
- *                         carry one.
+ * @property statusCode HTTP status code returned by the gateway.
+ * @property errorCode  Machine-readable application error code (e.g.
+ *                      `VALIDATION_ERROR`, `GATEWAY_MISSING_VARIABLES`).
+ *                      May be `null` when the gateway did not provide one.
+ * @property requestId  The `requestId` echoed by the backend (from the
+ *                      `x-request-id` header or a generated UUID), useful
+ *                      for log search. May be `null` if the response did
+ *                      not carry one.
  */
 public open class PromptHelmException(
     public val statusCode: Int,
-    public val code: String?,
-    public val correlationId: String?,
+    public val errorCode: String?,
+    public val requestId: String?,
     message: String,
     cause: Throwable? = null,
 ) : RuntimeException(message, cause)
@@ -39,43 +44,43 @@ public open class PromptHelmException(
 /** HTTP 401 — invalid or revoked API key. NOT retryable. */
 public class AuthenticationException(
     statusCode: Int,
-    code: String?,
-    correlationId: String?,
+    errorCode: String?,
+    requestId: String?,
     message: String,
-) : PromptHelmException(statusCode, code, correlationId, message)
+) : PromptHelmException(statusCode, errorCode, requestId, message)
 
-/** HTTP 403 — authenticated but lacks permission. NOT retryable. */
+/** HTTP 403 — authenticated but lacks permission / scope. NOT retryable. */
 public class AuthorizationException(
     statusCode: Int,
-    code: String?,
-    correlationId: String?,
+    errorCode: String?,
+    requestId: String?,
     message: String,
-) : PromptHelmException(statusCode, code, correlationId, message)
+) : PromptHelmException(statusCode, errorCode, requestId, message)
 
 /** HTTP 404 — prompt slug / id does not resolve in this environment. NOT retryable. */
 public class NotFoundException(
     statusCode: Int,
-    code: String?,
-    correlationId: String?,
+    errorCode: String?,
+    requestId: String?,
     message: String,
-) : PromptHelmException(statusCode, code, correlationId, message)
+) : PromptHelmException(statusCode, errorCode, requestId, message)
 
 /** HTTP 429 — rate limit exceeded. NOT retried automatically; honour `Retry-After`. */
 public class RateLimitException(
     statusCode: Int,
-    code: String?,
-    correlationId: String?,
+    errorCode: String?,
+    requestId: String?,
     message: String,
-) : PromptHelmException(statusCode, code, correlationId, message)
+) : PromptHelmException(statusCode, errorCode, requestId, message)
 
 /** Any other 4xx/5xx failure. 5xx are retried; 4xx are not. */
 public class ApiException(
     statusCode: Int,
-    code: String?,
-    correlationId: String?,
+    errorCode: String?,
+    requestId: String?,
     message: String,
     cause: Throwable? = null,
-) : PromptHelmException(statusCode, code, correlationId, message, cause)
+) : PromptHelmException(statusCode, errorCode, requestId, message, cause)
 
 /**
  * The request exceeded the configured per-call timeout.
@@ -93,15 +98,15 @@ internal object ErrorMapper {
 
     fun fromHttp(status: Int, envelope: ErrorEnvelope?): PromptHelmException {
         val message = envelope?.message ?: fallbackMessage(status)
-        val code = envelope?.code
-        val correlationId = envelope?.correlationId
+        val errorCode = envelope?.errorCode
+        val requestId = envelope?.requestId
 
         return when (status) {
-            401 -> AuthenticationException(status, code, correlationId, message)
-            403 -> AuthorizationException(status, code, correlationId, message)
-            404 -> NotFoundException(status, code, correlationId, message)
-            429 -> RateLimitException(status, code, correlationId, message)
-            else -> ApiException(status, code, correlationId, message)
+            401 -> AuthenticationException(status, errorCode, requestId, message)
+            403 -> AuthorizationException(status, errorCode, requestId, message)
+            404 -> NotFoundException(status, errorCode, requestId, message)
+            429 -> RateLimitException(status, errorCode, requestId, message)
+            else -> ApiException(status, errorCode, requestId, message)
         }
     }
 

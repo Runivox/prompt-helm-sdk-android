@@ -13,16 +13,16 @@ class ErrorTest {
             status = 401,
             envelope = ErrorEnvelope(
                 statusCode = 401,
-                error = "Unauthorized",
+                errorCode = "UNAUTHORIZED",
                 message = "bad key",
-                code = "unauthorized",
-                correlationId = "corr-1",
+                timestamp = "2026-06-05T10:30:00.000Z",
+                requestId = "req-1",
             ),
         )
         assertTrue(mapped is AuthenticationException)
         assertEquals(401, mapped.statusCode)
-        assertEquals("unauthorized", mapped.code)
-        assertEquals("corr-1", mapped.correlationId)
+        assertEquals("UNAUTHORIZED", mapped.errorCode)
+        assertEquals("req-1", mapped.requestId)
         assertEquals("bad key", mapped.message)
     }
 
