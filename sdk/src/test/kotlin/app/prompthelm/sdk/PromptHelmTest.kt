@@ -21,7 +21,7 @@ class PromptHelmTest {
             apiKey = MockHttpClient.TEST_API_KEY,
             httpEngine = engine(),
         )
-        assertEquals("0.1.0", PromptHelm.SDK_VERSION)
+        assertEquals("0.2.0", PromptHelm.SDK_VERSION)
         client.close()
     }
 
