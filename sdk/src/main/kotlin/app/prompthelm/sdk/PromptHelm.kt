@@ -119,7 +119,7 @@ public class PromptHelm @JvmOverloads public constructor(
     }
 
     public companion object {
-        public const val SDK_VERSION: String = "0.1.0"
+        public const val SDK_VERSION: String = "0.2.0"
         internal const val API_KEY_PREFIX = "phk_"
         internal const val API_KEY_LENGTH = 36
     }

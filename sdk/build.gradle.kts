@@ -65,7 +65,7 @@ dependencies {
 }
 
 mavenPublishing {
-    coordinates("app.prompthelm", "sdk-android", "0.1.0")
+    coordinates("app.prompthelm", "sdk-android", "0.2.0")
 
     pom {
         name.set("PromptHelm Android SDK")
